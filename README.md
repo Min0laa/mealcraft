@@ -1,76 +1,78 @@
 # MealCraft
 
-AI nutrition coach that builds your meal plan **and** your grocery cart.
-
-## The Problem
-
-Nutrition apps tell you what to eat but leave you alone for the hard part — actually buying the food. You end up googling recipes, guessing quantities, and overspending at the store.
-
-## The Solution
-
-Tell the chatbot your goal (bulk, cut, maintenance), your constraints (budget, dietary restrictions), and it handles the rest:
-
-1. **Generates a meal plan** — specific foods, portions in grams, macros, calories per meal
-2. **Builds your cart** — weekly shopping list with real prices from French retailers
-3. **Adapts over time** — learns what you liked, what you skipped, adjusts next week
+AI-powered nutrition coach that generates meal plans and grocery carts tailored to your fitness goals.
 
 ## Architecture
 
 ```
-mealcraft/
-├── src/
-│   ├── app/              # Next.js App Router
-│   │   ├── api/
-│   │   │   ├── plan/      # Meal plan generation
-│   │   │   ├── cart/      # Cart assembly endpoint
-│   │   │   └── chat/      # Conversational coaching
-│   │   ├── onboarding/    # Goal + preferences setup
-│   │   └── dashboard/     # Plans, cart, history
-│   ├── lib/
-│   │   ├── planner.ts     # Meal plan engine
-│   │   ├── cart.ts        # Cart builder + price fetcher
-│   │   ├── macros.ts      # Macro calculator
-│   │   ├── mistral.ts     # Mistral AI client
-│   │   └── retailers/     # Retailer API adapters
-│   │       ├── carrefour.ts
-│   │       └── intermarche.ts
-│   ├── db/
-│   │   └── schema.ts      # Drizzle ORM schema
-│   └── types/
-│       └── index.ts       # Shared types
-├── .env.example
-├── package.json
-└── README.md
+src/
+├── app/                    # Next.js App Router
+│   ├── api/chat/route.ts   # POST /api/chat — validated, service-layered
+│   ├── layout.tsx
+│   ├── page.tsx            # Client-side entry point
+│   └── globals.css
+├── components/             # Presentational components (single responsibility)
+│   ├── Header.tsx
+│   ├── GoalSelector.tsx
+│   ├── ChatWindow.tsx
+│   ├── ChatMessage.tsx
+│   ├── ChatInput.tsx
+│   └── TypingIndicator.tsx
+├── hooks/
+│   └── useChat.ts          # Chat state management hook
+├── lib/
+│   ├── constants.ts        # App config, system prompts, labels
+│   ├── env.ts              # Environment variable access
+│   └── validation.ts       # Zod schemas for API input validation
+├── services/
+│   └── mistral.ts          # Mistral AI service layer
+└── types/
+    └── index.ts            # Shared TypeScript interfaces
 ```
 
 ## Stack
 
-- **Next.js 14** — App Router, Server Components, API Routes
-- **Mistral AI** — Meal plan generation + coaching conversation
-- **PostgreSQL + Drizzle ORM** — User profiles, meal history, preferences
-- **Retailer APIs** — Price fetching, cart assembly (Carrefour, Intermarché)
+- **Frontend**: Next.js 15, React 19, Tailwind CSS 4, Framer Motion
+- **Backend**: Next.js API Routes, Zod validation
+- **AI**: Mistral AI (`mistral-small-latest`)
+- **Language**: TypeScript (strict mode)
 
-## Technical Challenges
-
-1. **Reliable macro calculation** — Food databases are inconsistent. Need cross-referencing.
-2. **Real-time pricing** — Retailer prices change daily. Cart must reflect current availability.
-3. **Meal variety** — Avoid the "chicken rice broccoli" trap. Generate real variety across a week.
-4. **Cultural food preferences** — Dietary restrictions vary by culture. The AI needs context.
-
-## Status
-
-Work in progress. Core prototype available as a [live demo](https://sachamorin.dev/lab/nutrition).
-
-## Run locally
+## Setup
 
 ```bash
-git clone https://github.com/Min0laa/mealcraft.git
-cd mealcraft
 cp .env.example .env.local
+# Add your Mistral API key to .env.local
+
 npm install
 npm run dev
 ```
 
-## License
+## API
 
-MIT
+### POST /api/chat
+
+Request:
+```json
+{
+  "messages": [{ "role": "user", "content": "Give me a meal plan" }],
+  "goal": "bulk",
+  "locale": "en"
+}
+```
+
+Response:
+```json
+{
+  "reply": "Breakfast - 150g oats, 30g whey..."
+}
+```
+
+Validation: Zod schema enforces message length limits, valid goal values, and locale.
+
+## Design Decisions
+
+- **Service layer**: AI calls are abstracted behind `services/mistral.ts`, decoupled from the API route
+- **Input validation**: Every API request is validated with Zod before reaching the service layer
+- **Component decomposition**: Each component has a single responsibility, props flow down
+- **Custom hook**: `useChat` encapsulates all chat state (messages, loading, errors, scrolling)
+- **Bilingual**: Full EN/FR support via locale prop, no external i18n library needed for this scope

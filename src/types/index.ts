@@ -1,23 +1,14 @@
 export type FitnessGoal = "bulk" | "cut" | "maintain";
+export type Locale = "en" | "fr";
+export type ActivityLevel = "sedentary" | "moderate" | "active" | "athlete";
 
 export interface UserProfile {
-  userId: string;
-  goal: FitnessGoal;
-  weight: number;
-  height: number;
-  activityLevel: "sedentary" | "moderate" | "active" | "athlete";
-  dietaryRestrictions: string[];
-  budget: number;
-  preferredRetailer: "carrefour" | "intermarche" | "leclerc";
-}
-
-export interface Meal {
-  name: string;
-  items: MealItem[];
-  totalCalories: number;
-  totalProtein: number;
-  totalCarbs: number;
-  totalFat: number;
+  weight: number | null;
+  height: number | null;
+  activityLevel: ActivityLevel | null;
+  budget: number | null;
+  supermarket: string | null;
+  restrictions: string;
 }
 
 export interface MealItem {
@@ -27,6 +18,15 @@ export interface MealItem {
   protein: number;
   carbs: number;
   fat: number;
+}
+
+export interface Meal {
+  name: string;
+  items: MealItem[];
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
 }
 
 export interface DailyPlan {
@@ -47,4 +47,25 @@ export interface WeeklyCart {
   items: CartItem[];
   totalPrice: number;
   retailer: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatRequest {
+  messages: ChatMessage[];
+  goal: FitnessGoal;
+  locale: Locale;
+  profile: UserProfile;
+}
+
+export interface ChatResponse {
+  reply: string;
+}
+
+export interface ApiError {
+  error: string;
+  details?: string;
 }
